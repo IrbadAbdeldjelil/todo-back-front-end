@@ -3,8 +3,7 @@ const morgan = require('morgan');
 const hemet = require('helmet');
 const xssClean = require('xss-clean');
 const cors = require('cors')
-const { ZodError, success } = require('zod');
-const { timeStamp } = require('console');
+const { ZodError } = require('zod');
 const app = express();
 
 const isDev = process.env.NODE_ENV === 'developement';
