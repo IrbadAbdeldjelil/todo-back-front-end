@@ -1,69 +1,75 @@
 const express = require('express');
 const morgan = require('morgan');
 const hemet = require('helmet');
-const xssClean = require('xss-clean');
-const cors = require('cors')
+const cors = require('cors');
 const { ZodError } = require('zod');
+const authRoutes = require('./routes/auth.routes');
+const tasksRoutes = require('./routes/tasks.routes');
+
 const app = express();
 
-const isDev = process.env.NODE_ENV === 'developement';
+const isDev = process.env.NODE_ENV === 'development';
 
-app.get('/', (req, res) => res.send('Hello World!'));
-
-// URL allows
-app.use(cors({
-    origin: process.env.CLIENT_URL
-}));
+// security middlewares
+app.use(hemet());
+app.use(cors());
 
 app.use(express.json({limit: '10kb'}));
-app.use(express.urlencoded());
+app.use(express.urlencoded({ extended: true}));
 
 // logging
 if (isDev) {
     app.use(morgan('dev'));
 }
 
+// auth routes
+app.use('/api/v1/auth', authRoutes)
+// tasks routes
+app.use('/api/v1/tasks', tasksRoutes);
 // error handler
 app.use(function (err, req, res, next) {
      if (isDev) {
       console.error(err.stack)
      }
 
-    let status = err.status || 500;
+    let statusCode = err.status || 500;
     let message = err.message || 'Something broke!';
     
     // validation errors
     if (err instanceof ZodError) {
-        res.status(status).json({
+        return res.status(statusCode).json({
             success: false,
-            status: 400,
+            statusCode: 400,
             message: 'validation errors',
-            errors: err.error,
             data: null,
-            time: new date().toISOString() 
+            errors: err.issues.map(e=> ({
+                field: e.path.join('.'),
+                message: e.message
+            })),
+            time: new Date().toISOString() 
         })
     }
 
-    res.status(500).json({
+    return res.status(statusCode).json({
         success: false,
-        status,
+        statusCode,
         message,
-        errors: null,
         data: null,
+        errors: null,
         time: new Date().toISOString()
     });
 });
-
 
 // 404
 app.use((req, res) => {
     res.status(404).json({
         success: false,
-        status: 404,
+        statusCode: 404,
         message: "not found",
         errors: null,
-        data: null
-    })
-})
+        data: null,
+        time: new Date().toISOString()
+    });
+});
 
 module.exports = app;
