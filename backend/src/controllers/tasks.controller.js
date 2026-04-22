@@ -6,7 +6,7 @@ const { sendResponse } = require('../helpers/responses');
 module.exports.createTask = async (req, res, next) => {
        
     const {title, description} = req.validated;
-    const userId = req.body.userId;
+    const userId = req.user.id;
     const task = await Task.create({title, description, userId});
     if (!task) {
         throw createError(401, 'something went wrong on creating task');

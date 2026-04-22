@@ -1,7 +1,6 @@
 const { Router } = require('express');
 const { signup, signin } = require('../controllers/auth.controller');
 const { signinSchema, signupSchema, validate } = require('../middlewares/validation.middleware')
-
 const routes = new Router();
 
 routes.post('/signup', validate(signupSchema), signup);
