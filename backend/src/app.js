@@ -6,7 +6,7 @@ const cors = require('cors');
 const { ZodError } = require('zod');
 const authRoutes = require('./routes/auth.routes');
 const tasksRoutes = require('./routes/tasks.routes');
-
+const { limiter } = require('./middlewares/limit.middleware');
 const app = express();
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -14,7 +14,7 @@ const isDev = process.env.NODE_ENV === 'development';
 // security middlewares
 app.use(hemet());
 app.use(cors());
-
+   
 app.use(express.json({limit: '10kb'}));
 app.use(express.urlencoded({ extended: true}));
 //app.use(cookieParser());
@@ -23,8 +23,9 @@ if (isDev) {
     app.use(morgan('dev'));
 }
 
+app.use(limiter);
 // auth routes
-app.use('/api/v1/auth', authRoutes)
+app.use('/api/v1/auth', authRoutes);
 // tasks routes
 app.use('/api/v1/tasks', tasksRoutes);
 // error handler
@@ -38,7 +39,7 @@ app.use(function (err, req, res, next) {
     
     // validation errors
     if (err instanceof ZodError) {
-        return res.status(statusCode).json({
+        return res.status(400).json({
             success: false,
             statusCode: 400,
             message: 'validation errors',

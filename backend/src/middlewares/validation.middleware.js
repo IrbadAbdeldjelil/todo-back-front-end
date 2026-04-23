@@ -16,8 +16,8 @@
 //task
 const todoSchema = z.object({
     title: z.string(),
-    description: z.string(),
-    status: z.enum(['todo', 'in-progress', 'done'])
+    description: z.string().optional(),
+    status: z.enum(['in-progress', 'done']).optional()
 });
 
 function validate(schema) {

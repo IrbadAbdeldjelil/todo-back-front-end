@@ -84,5 +84,6 @@ module.exports.deleteTask = async (req, res, next) => {
 //id validation
 function validateId(id) {
     if(!id) throw createError(400, 'ID is required');
-    if(!Number(id)) throw createError(400, "ID must be Number");
+    const num =Number(id);
+    if(isNaN(num) || !Number.isInteger(num) || num <= 0) throw createError(400, "ID must be a positive integer");
 }
