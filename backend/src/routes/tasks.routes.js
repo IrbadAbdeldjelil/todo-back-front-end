@@ -11,13 +11,13 @@ const {
 const {todoSchema, validate} = require('../middlewares/validation.middleware');
 const { auth } = require('../middlewares/auth.middleware');
 
-
+router.use(auth);
 // get all tasks
 router.get('/', getTasks);
 // get task by ID
 router.get('/:id', getTask);
 
-router.use(auth);
+
 // create task
 router.post('/', validate(todoSchema), createTask);
 //update task by ID

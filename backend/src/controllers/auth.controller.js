@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+//const { verify } = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const createError = require('http-errors');
 const { User } = require('../models/relation.model');
@@ -16,7 +16,9 @@ module.exports.signup = async (req, res, next) => {
       const hashPassword = await bcrypt.hash(password, 12);
 
       const newUser = await User.create({username, email, password: hashPassword});
-      const { accessToken, refreshToken } = createToken({id: newUser.id, role: newUser.role});
+      const { accessToken } = createToken({id: newUser.id, role: newUser.role});
+
+      res.cookie('refreshToken', process.env.JWT_REFRESH_SECRET, cookieOption)
       sendResponse(res, true, 201, 'user registered successfully', {username, email, accessToken}, null);
 
 }
@@ -29,11 +31,38 @@ module.exports.signin = async (req, res, next) => {
     if (!isUser) throw createError(401, 'Invalid email or password');
     if (!(await bcrypt.compare(password, isUser.password))) throw createError(401, 'Invalid password or email');
 
-    const {accessToken, refreshToken} = createToken({id: isUser.id, role: isUser.role});
+    const {accessToken } = createToken({id: isUser.id, role: isUser.role});
     sendResponse(res, true, 201, 'you signedin successfully', {
         username: isUser.username, 
         email, 
         accessToken
     }, null);
-
 }
+
+//signout
+module.exports.signout = async (req, res, next) => {
+     sendResponse(res, true, 200, 'you signed out successfully', null, null); 
+}
+
+// // refresh token 
+// module.exports.refreshToken = async (req, res, next) => {
+//       const refresh = req.cookies.refreshToken;
+//       if(!refreshToken) throw createError(403, 'refresh token is required');
+      
+//       let decoded;
+//       try {
+//         decoded = verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+//       } catch (err) {
+//         throw createError(403, 'Invalid or expired refresh tokn');
+//       }
+//       const user = await User.findByPk(decoded.id);
+//       if(!user) throw createError(404, 'user not longer exist');
+      
+//       const { accessToken } = createToken({
+//         id: user.id,
+//         role: user.role
+//       });
+
+//       res.setHeader('authorization', `Bearer ${accessToken}`);
+//       sendResponse(res, true, 201, 'token refreshed successfully', null, null)
+// }

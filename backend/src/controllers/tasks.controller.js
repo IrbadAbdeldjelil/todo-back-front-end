@@ -1,13 +1,13 @@
 const createError = require('http-errors');
-const { Task } = require('../models/relation.model');
+const { Task, User } = require('../models/relation.model');
 const { sendResponse } = require('../helpers/responses');
 
 // create
 module.exports.createTask = async (req, res, next) => {
        
     const {title, description} = req.validated;
-    const userId = req.user.id;
-    const task = await Task.create({title, description, userId});
+    const user = req.user;
+    const task = await user.createTask({title, description});
     if (!task) {
         throw createError(401, 'something went wrong on creating task');
     }
@@ -16,8 +16,14 @@ module.exports.createTask = async (req, res, next) => {
 }
 // get all tasks
 module.exports.getTasks = async (req, res, next) => {
-
-      const tasks = await Task.findAll()
+      const userId = req.user.id;
+      const tasks = await Task.findAll({
+        where: {userId}, 
+        include:{
+            model: User,
+            attributes: ["username", "email", "role"]
+        }
+    });
       sendResponse(res, true, 200, 'all tasks', tasks, null);
 };
 
@@ -26,7 +32,14 @@ module.exports.getTask = async (req, res, next) => {
 
     const id = req.params.id;
     validateId(id);
-    const task = await Task.findByPk(id);
+    const user = req.user;
+    const task = await Task.findOne({
+        where: {id, userId: user.id},
+        include:{
+            model: User,
+            attributes: ["username", "email", "role"]
+        }
+    });
     if (!task) {
        throw createError(404, 'task not exist');
     }
@@ -37,9 +50,10 @@ module.exports.getTask = async (req, res, next) => {
 module.exports.updateTask = async (req, res, next) => {
         
       const id = req.params.id;
-      validateId(id)
+      validateId(id);
+      const user = req.user;
       const {title, description, status} = req.validated;
-      const isTask = await Task.findByPk(id);
+      const isTask = await Task.findOne({where: {id, userId: user.id}});
       if (!isTask) {
         throw createError(404, 'task not exist');
       }
@@ -58,11 +72,12 @@ module.exports.deleteTask = async (req, res, next) => {
         
     const id= req.params.id;
     validateId(id);
-    const isTask = await Task.findByPk(id);
+    const user = req.user;
+    const isTask = await Task.findOne({where: {id, userId: user.id}});
     if(!isTask) {
         throw createError(404, 'task not exist');
     }
-    const task = await Task.destroy({where:{id}});
+    const task = await Task.destroy({where:{id, userId: user.id}});
     sendResponse(res, true, 200, 'task deleted successfuly', null, null);
 }
 

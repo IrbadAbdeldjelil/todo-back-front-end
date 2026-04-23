@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+//const cookieParser = require('cookie-parser');
 const hemet = require('helmet');
 const cors = require('cors');
 const { ZodError } = require('zod');
@@ -16,7 +17,7 @@ app.use(cors());
 
 app.use(express.json({limit: '10kb'}));
 app.use(express.urlencoded({ extended: true}));
-
+//app.use(cookieParser());
 // logging
 if (isDev) {
     app.use(morgan('dev'));
